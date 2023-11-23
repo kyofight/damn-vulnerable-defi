@@ -58,6 +58,14 @@ describe('[Challenge] Climber', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const attacker = await (await ethers.getContractFactory('ClimberAttacker', player)).deploy(
+            timelock.address,
+            vault.address,
+            token.address,
+            player.address
+        );
+
+        await attacker.connect(player).attack()
     });
 
     after(async function () {
